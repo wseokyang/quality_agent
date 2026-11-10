@@ -7,9 +7,9 @@
 Node.js 20 이상과 프로젝트의 Python 의존성이 필요합니다. 아래 명령은 저장소 루트에서 실행합니다.
 
 ```bash
-python3 -m venv quality_agent/.venv
-quality_agent/.venv/bin/python -m pip install -r quality_agent/requirements-dev.txt
-cd quality_agent/tests/browser
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-dev.txt
+cd tests/browser
 npm ci
 npx playwright install chromium
 ```
@@ -19,7 +19,7 @@ Linux에서 Chromium 시스템 라이브러리가 없는 경우 해당 환경의
 ## 실행
 
 ```bash
-cd quality_agent/tests/browser
+cd tests/browser
 npm test
 ```
 
@@ -29,7 +29,7 @@ npm test
 
 | 환경변수 | 용도 |
 |---|---|
-| `QUALITY_PYTHON` | 프로젝트 Python 실행 파일. 기본값은 `quality_agent/.venv/bin/python`이며 Windows에서는 `.venv/Scripts/python.exe`입니다. |
+| `QUALITY_PYTHON` | 프로젝트 Python 실행 파일. 기본값은 저장소 루트의 `.venv/bin/python`이며 Windows에서는 `.venv/Scripts/python.exe`입니다. |
 | `QUALITY_BROWSER_EXECUTABLE` | 이미 설치된 Chromium 실행 파일 경로. 생략하면 Playwright가 설치한 Chromium을 사용합니다. |
 | `QUALITY_BROWSER_OUTPUT_DIR` | 결과 저장 폴더. 생략하면 실행별 OS 임시 폴더를 사용합니다. |
 

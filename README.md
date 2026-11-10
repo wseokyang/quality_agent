@@ -8,6 +8,7 @@
 
 | 파일 | 용도 |
 |---|---|
+| [AGENTS.md](AGENTS.md) | clone한 저장소에서 에이전트가 따라갈 환경 확인·실행·연결·검증 순서 |
 | [prd_frd_quality.md](prd_frd_quality.md) | 제품 목표와 요구사항 |
 | [docs/deployment.md](docs/deployment.md) | 실제 신규 서비스 실행·연결·백업·복구 절차 |
 | [docs/reference_review.md](docs/reference_review.md) | 전달받은 과거 기록과 현재 Dockerfile의 차이 |
@@ -17,6 +18,18 @@
 | [compose.yaml](compose.yaml) | 새 API·보고서 worker·PostgreSQL 서비스 구성 |
 | [config/tool_registry.json](config/tool_registry.json) | 추적 가능한 실제 읽기 Tool 목록. 초기값은 빈 배열 |
 | [docs/quality_agent_implementation_guide.md](docs/quality_agent_implementation_guide.md) | 설계 배경과 단계별 구현 가이드 |
+
+사내 에이전트에게는 아래처럼 요청할 수 있다. 현재 환경에서 이미 제공한 정보는 함께 전달한다.
+
+```text
+AGENTS.md를 읽고 현재 사내 환경에서 quality_agent를 실행해줘.
+실제 Open WebUI Dockerfile·시작/백업 스크립트·기존 Tool 코드를 먼저 확인하고,
+새 품질 API와 worker를 실행한 뒤 읽기 Tool 하나의 연결까지 검증해줘.
+기존 SSO·LLM·브랜딩·백업 설정을 유지하고, 없는 필수 설정만 묶어서 물어봐.
+실행한 검증과 아직 연결하지 못한 항목을 구분해서 보고해줘.
+```
+
+배포 대상과 실제 Open WebUI 프로젝트 경로를 알려주면 기존 파일을 찾는 데 도움이 된다. 위 요청은 에이전트가 수행할 작업의 예시이며, 이 문서를 읽는 것만으로 운영 배포를 실행하라는 지시는 아니다.
 
 ## 제공하는 기능과 경계
 
