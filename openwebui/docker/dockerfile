@@ -1,0 +1,72 @@
+# 기존 corporate-approved FROM 라인은 이 파일 위에 유지하거나,
+# CDEP가 베이스 이미지를 지정하는 현재 방식을 그대로 사용한다.
+
+USER root
+
+# 비밀값은 CDEP 런타임 ENV에서 주입한다.
+ENV OPENAI_API_BASE_URL="http://qual-llm--qual-llm-proxy-prod.cdep.samsungds.net/"
+
+ENV PATH="${HOME}/.local/bin:${PATH}" \
+    PYTHONPATH="/project" \
+    DATA_DIR="/app/backend/data" \
+    WEBUI_AUTH="true" \
+    ENABLE_OPENAI_API="true" \
+    DEFAULT_USER_ROLE="pending" \
+    ENABLE_PERSISTENT_CONFIG="true" \
+    RESET_CONFIG_ON_START="false"
+
+ENV ENABLE_OAUTH="true" \
+    ENABLE_OAUTH_SIGNUP="true" \
+    ENABLE_OAUTH_PERSISTENT_CONFIG="false" \
+    ENABLE_SIGNUP="false" \
+    ENABLE_LOGIN_FORM="true" \
+    ENABLE_PASSWORD_AUTH="true" \
+    ENABLE_PASSWORD_CHANGE_FORM="false" \
+    ENABLE_INITIAL_ADMIN_SIGNUP="false" \
+    OAUTH_AUTO_REDIRECT="false" \
+    OAUTH_PROVIDER_NAME="DS SSO" \
+    OAUTH_SCOPES="openid email profile" \
+    OPENID_PROVIDER_URL="https://stsds.secsso.net/adfs/.well-known/openid-configuration" \
+    OAUTH_MERGE_ACCOUNTS_BY_EMAIL="false" \
+    OAUTH_EMAIL_CLAIM="mail" \
+    ENABLE_OAUTH_ID_TOKEN_COOKIE="false" \
+    ENABLE_OAUTH_ROLE_MANAGEMENT="true" \
+    OAUTH_ROLES_CLAIM="deptname" \
+    OAUTH_ROLES_SEPARATOR="," \
+    OAUTH_ADMIN_ROLES="admin" \
+    OAUTH_ALLOWED_ROLES="품질팀(TSP총괄),품질검증그룹(TSP총괄),S.PKG메모리품질그룹(TSP총괄),C.PKG메모리품질그룹(TSP총괄),C.PKG Logic품질그룹(TSP총괄),S.PKG Logic품질그룹(TSP총괄)"
+
+ENV no_proxy="10.97.48.147,.samsungds.net,12.98.196.230,stsds.secsso.net,127.0.0.1,localhost" \
+    NO_PROXY="10.97.48.147,.samsungds.net,12.98.196.230,stsds.secsso.net,127.0.0.1,localhost"
+
+ENV APP_ENV="prod" \
+    ALLOW_EMPTY_DB="false" \
+    BACKUP_INTERVAL_SECONDS="43200" \
+    BACKUP_KEEP="10" \
+    BACKUP_TIMEOUT_SECONDS="300" \
+    APP_STOP_SECONDS="30" \
+    DATABASE_ENABLE_SQLITE_WAL="true" \
+    DATABASE_SQLITE_PRAGMA_SYNCHRONOUS="FULL" \
+    DATABASE_SQLITE_PRAGMA_BUSY_TIMEOUT="5000" \
+    UVICORN_WORKERS="1" \
+    PORT="8080"
+
+ENV BACKUP_S3_ENDPOINT="http://s3.cephrgw-cl1.hpcc.samsungds.net:30100" \
+    BACKUP_S3_BUCKET="pjt-qual-llm-s3" \
+    BACKUP_S3_PREFIX="openwebui/prod/db-backups-test/" \
+    BACKUP_S3_REGION="ceph" \
+    BACKUP_S3_ACCESS_KEY_ENV="AWS_ACCESS_KEY_ID" \
+    BACKUP_S3_SECRET_KEY_ENV="AWS_SECRET_ACCESS_KEY" \
+    BACKUP_LEGACY_SHARED_DIR=""
+
+# 필요한 백업 스크립트만 이미지에 포함한다.
+COPY scripts/openwebui_s3_backup.py /app/backend/openwebui_s3_backup.py
+
+RUN chmod 0644 /app/backend/openwebui_s3_backup.py && \
+    python -m py_compile /app/backend/openwebui_s3_backup.py && \
+    python -c 'import boto3; from botocore.config import Config; Config(request_checksum_calculation="when_required", response_checksum_validation="when_required")'
+
+EXPOSE 8080
+STOPSIGNAL SIGTERM
+
+CMD ["python", "-u", "/app/backend/openwebui_s3_backup.py"]

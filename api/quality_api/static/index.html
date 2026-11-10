@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <meta name="color-scheme" content="light">
+    <title>품질 업무 검토 | QREW</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">본문으로 이동</a>
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">Q</span><div><strong>품질 업무 검토</strong><span class="subtle">QREW · 업무 기록과 지식</span></div></div>
+      <div class="session"><span id="session-status" role="status">연결 확인 중</span><button id="refresh" class="quiet" type="button" disabled>새로고침</button></div>
+    </header>
+    <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+    <div id="session-ended" class="session-ended" hidden>
+      <strong>Open WebUI에서 검토 화면을 다시 열어 주세요.</strong>
+      <p>화면 접근은 짧은 시간만 유지됩니다. 대화의 ‘품질 업무 검토’ 버튼을 누르면 저장된 기록을 이어서 확인할 수 있습니다.</p>
+    </div>
+    <div id="workspace" class="workspace" hidden>
+      <aside class="sidebar" aria-label="업무 목록">
+        <div class="section-head"><h2>업무 케이스</h2><button id="new-case" class="small" type="button">새 업무</button></div>
+        <label class="search-label" for="case-search">업무 찾기</label>
+        <input id="case-search" type="search" placeholder="제목 검색" autocomplete="off">
+        <div id="case-list" class="case-list"></div>
+        <p class="sidebar-note">분석과 도구 실행은 Open WebUI에서 진행하고, 이곳에서 근거와 결과를 검토합니다.</p>
+      </aside>
+      <main id="main" tabindex="-1">
+        <div id="empty-state" class="empty-state"><span class="eyebrow">QUALITY WORKSPACE</span><h1>업무의 근거를 한곳에.</h1><p>케이스를 선택하면 자료, 검토 기록과 확정한 결과를 확인할 수 있습니다.</p></div>
+        <section id="case-workspace" hidden>
+          <div class="case-heading"><div><div id="case-meta" class="meta"></div><h1 id="case-title"></h1><p id="case-purpose" class="subtle"></p></div><div id="case-actions" class="actions"></div></div>
+          <div id="case-stats" class="stats" aria-label="업무 현황"></div>
+          <nav id="tabs" class="tabs" aria-label="업무 검토 항목">
+            <button type="button" data-tab="evidence" aria-current="page">근거 검토</button>
+            <button type="button" data-tab="sources">원천 자료</button>
+            <button type="button" data-tab="results">결과 · 보고서</button>
+            <button type="button" data-tab="assets">절차 · 지식</button>
+          </nav>
+          <section id="panel" class="panel" aria-live="polite" aria-label="검토 내용"></section>
+        </section>
+      </main>
+    </div>
+    <dialog id="dialog" aria-labelledby="dialog-title"><div class="dialog-heading"><h2 id="dialog-title"></h2><button id="dialog-close" class="quiet" type="button" aria-label="닫기">닫기</button></div><div id="dialog-body"></div></dialog>
+    <noscript><p class="notice">이 검토 화면은 JavaScript가 필요합니다.</p></noscript>
+  </body>
+</html>

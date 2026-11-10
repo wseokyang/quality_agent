@@ -1,0 +1,15 @@
+# Build FROM the organization's EXISTING QREW image after its backup/SSO setup.
+# Build context is quality_agent/; this adds a Python package only.
+# No guessed public image fallback. Pin the reviewed image digest in CDEP.
+ARG OPENWEBUI_BASE_IMAGE
+FROM ${OPENWEBUI_BASE_IMAGE}
+
+COPY openwebui/pyproject.toml /tmp/quality-openwebui-bridge/pyproject.toml
+COPY openwebui/quality_bridge/ /tmp/quality-openwebui-bridge/quality_bridge/
+RUN python -m pip install --no-cache-dir /tmp/quality-openwebui-bridge \
+    && python -c "import quality_bridge" \
+    && rm -rf /tmp/quality-openwebui-bridge
+
+# Intentionally no USER, ENV overrides, ENTRYPOINT or CMD. Inherit the existing
+# image's identity, DS SSO, vLLM connection, branding and S3 backup supervisor.
+# Use the approved Python package mirror in the base image/build environment.

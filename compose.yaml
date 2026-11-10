@@ -1,0 +1,93 @@
+name: quality-agent
+
+x-api-environment: &api-environment
+  QUALITY_ENVIRONMENT: ${QUALITY_ENVIRONMENT:-production}
+  QUALITY_DATABASE_URL: ${QUALITY_DATABASE_URL:?Generate a private .env with scripts/generate_env.py}
+  QUALITY_ARTIFACT_DIR: /var/lib/quality/artifacts
+  QUALITY_HUMAN_JWT_SECRET: ${QUALITY_HUMAN_JWT_SECRET:?Human signing secret is required}
+  QUALITY_MODEL_JWT_SECRET: ${QUALITY_MODEL_JWT_SECRET:?Model signing secret is required}
+  QUALITY_TRACE_JWT_SECRET: ${QUALITY_TRACE_JWT_SECRET:?Trace signing secret is required}
+  QUALITY_WORKER_JWT_SECRET: ${QUALITY_WORKER_JWT_SECRET:?Worker signing secret is required}
+  QUALITY_RECOVERY_EPOCH: ${QUALITY_RECOVERY_EPOCH:?Recovery epoch is required}
+  QUALITY_RECOVERY_MODE: ${QUALITY_RECOVERY_MODE:-false}
+  QUALITY_DRAINING: ${QUALITY_DRAINING:-false}
+  QUALITY_JWT_ISSUER: ${QUALITY_JWT_ISSUER:-quality-openwebui}
+  QUALITY_JWT_AUDIENCE: ${QUALITY_JWT_AUDIENCE:-quality-api}
+  QUALITY_TOOL_REGISTRY_PATH: /app/config/tool_registry.json
+  QUALITY_USER_TEAMS_JSON: ${QUALITY_USER_TEAMS_JSON:?Set team membership JSON, initially an empty object}
+  QUALITY_CURATOR_IDS_JSON: ${QUALITY_CURATOR_IDS_JSON:-[]}
+
+x-service: &service
+  image: ${QUALITY_IMAGE:-quality-agent:local}
+  build:
+    context: ./api
+    dockerfile: Dockerfile
+    args:
+      PYTHON_BASE_IMAGE: ${QUALITY_PYTHON_BASE_IMAGE:-python:3.12-slim}
+  environment: *api-environment
+  user: "10001:10001"
+  init: true
+  read_only: true
+  tmpfs:
+    - /tmp:rw,nosuid,noexec,size=64m
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  pids_limit: 128
+  stop_grace_period: 40s
+  volumes:
+    - artifacts:/var/lib/quality/artifacts
+    - ./config:/app/config:ro
+  networks: [private]
+  depends_on:
+    db:
+      condition: service_healthy
+
+services:
+  db:
+    image: ${QUALITY_POSTGRES_IMAGE:-postgres:16}
+    environment:
+      POSTGRES_USER: quality
+      POSTGRES_DB: quality
+      POSTGRES_PASSWORD: ${QUALITY_DB_PASSWORD:?Database password is required}
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    networks: [private]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U quality -d quality"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+    stop_grace_period: 60s
+
+  migrate:
+    <<: *service
+    command: [python, -m, quality_api.cli, migrate]
+    profiles: [ops]
+    healthcheck:
+      disable: true
+    restart: "no"
+
+  quality-api:
+    <<: *service
+    ports:
+      - "${QUALITY_BIND_HOST:-127.0.0.1}:${QUALITY_HTTP_PORT:-18080}:8000"
+    networks: [private, edge]
+    restart: unless-stopped
+
+  quality-worker:
+    <<: *service
+    command: [python, -m, quality_api.cli, worker]
+    healthcheck:
+      disable: true
+    restart: unless-stopped
+
+networks:
+  private:
+    internal: true
+  edge: {}
+
+volumes:
+  postgres: {}
+  artifacts: {}
